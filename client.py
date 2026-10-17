@@ -1,7 +1,7 @@
 
 import socket
 
-HOST = "127.0.0.1"
+HOST = "enter ur friend ip address here"
 PORT = 5000
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
