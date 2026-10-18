@@ -2,49 +2,26 @@
 import socket
 import threading
 
-
-
-
-from protocol import parse_message
+from protocol import CHAT, send_packet, receive_packet
 
 HOST = "0.0.0.0"
 PORT = 5000
 
-def receive_messages(sock):
-    buffer = b""
 
-    while True:
-        try:
-            data = sock.recv(1024)
+def receive_messages(conn):
+    try:
+        while True:
+            packet_type, payload = receive_packet(conn)
 
-            if not data:
-                print("\nFriend disconnected.")
-                break
+            if packet_type == CHAT:
+                message = payload.decode("utf-8")
+                print(f"\nFriend: {message}")
+            else:
+                print(f"\nUnknown packet type: {packet_type}")
 
-            buffer += data
+    except (ConnectionError, OSError):
+        print("\nFriend disconnected.")
 
-            while b"\n" in buffer:
-                raw_message, buffer = buffer.split(b"\n", 1)
-                
-                message = raw_message.decode()
-
-                try:
-                    message_type, content = parse_message(message)
-                except ValueError as error:
-                    print(f"\nInvalid message: {error}")
-                    continue
-                if message_type == "CHAT" and content == "/quit":
-                    print("\nFriend ended the chat.")
-                    return
-
-                if message_type == "CHAT":
-                    print(f"\nFriend: {content}")
-                else:
-                    print(f"\nUnknown message type: {message_type}")
-
-
-        except OSError:
-            break
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -55,16 +32,22 @@ print("Waiting for a connection...")
 conn, addr = server.accept()
 print(f"Connected to {addr}")
 
-thread = threading.Thread(target=receive_messages, args=(conn,))
+thread = threading.Thread(
+    target=receive_messages,
+    args=(conn,),
+    daemon=True
+)
 thread.start()
 
 try:
     while True:
         message = input("You: ")
-        conn.sendall(("CHAT|" + message + "\n").encode())
 
         if message == "/quit":
             break
+
+        send_packet(conn, CHAT, message.encode("utf-8"))
+
 finally:
     conn.close()
     server.close()
