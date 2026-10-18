@@ -5,6 +5,7 @@ import threading
 HOST = "0.0.0.0"
 PORT = 5000
 
+<<<<<<< HEAD
 
 def receive_messages(sock):
     buffer = b""
@@ -32,7 +33,10 @@ def receive_messages(sock):
         except OSError:
             break
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind((HOST, PORT))
