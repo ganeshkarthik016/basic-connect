@@ -5,19 +5,33 @@ import threading
 HOST = "0.0.0.0"
 PORT = 5000
 
-def receive_messages(conn):
+
+def receive_messages(sock):
+    buffer = b""
+
     while True:
         try:
-            data = conn.recv(1024)
+            data = sock.recv(1024)
 
             if not data:
-                print("\nClient disconnected.")
+                print("\nFriend disconnected.")
                 break
 
-            print("\nFriend:", data.decode().rstrip("\n"))
+            buffer += data
+
+            while b"\n" in buffer:
+                raw_message, buffer = buffer.split(b"\n", 1)
+                message = raw_message.decode()
+
+                if message == "/quit":
+                    print("\nFriend ended the chat.")
+                    return
+
+                print(f"\nFriend: {message}")
 
         except OSError:
             break
+
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
