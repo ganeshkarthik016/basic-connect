@@ -1,6 +1,9 @@
-
 import socket
 import threading
+
+
+
+from protocol import parse_message
 
 HOST = input("Enter host IP: ")
 PORT = 5000
@@ -21,13 +24,23 @@ def receive_messages(sock):
 
             while b"\n" in buffer:
                 raw_message, buffer = buffer.split(b"\n", 1)
+                
                 message = raw_message.decode()
 
-                if message == "/quit":
+                try:
+                    message_type, content = parse_message(message)
+                except ValueError as error:
+                    print(f"\nInvalid message: {error}")
+                    continue
+                if message_type == "CHAT" and content == "/quit":
                     print("\nFriend ended the chat.")
                     return
 
-                print(f"\nFriend: {message}")
+                if message_type == "CHAT":
+                    print(f"\nFriend: {content}")
+                else:
+                    print(f"\nUnknown message type: {message_type}")
+
 
         except OSError:
             break
@@ -44,7 +57,7 @@ thread.start()
 try:
     while True:
         message = input("You: ")
-        client.sendall((message + "\n").encode())
+        client.sendall(("CHAT|" + message + "\n").encode())
 
         if message == "/quit":
             break
