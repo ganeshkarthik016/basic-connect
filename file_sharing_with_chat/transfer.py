@@ -50,14 +50,15 @@ def send_file(sock, file_path, send_lock=None):
     print(f"Sent {sent_bytes} bytes from {file_path}")
 
 
-def receive_file(sock, destination_dir="."):
-    # Receive and decode the metadata first.
-    packet_type, payload = receive_packet(sock)
+def receive_file(sock, destination_dir=".", metadata=None):
+    if metadata is None:
+        packet_type, payload = receive_packet(sock)
 
-    if packet_type != FILE_INFO:
-        raise ValueError("Expected FILE_INFO packet")
+        if packet_type != FILE_INFO:
+            raise ValueError("Expected FILE_INFO packet")
 
-    metadata = decode_metadata(payload)
+        metadata = decode_metadata(payload)
+
 
     filename = metadata["filename"]
     expected_size = metadata["size"]
